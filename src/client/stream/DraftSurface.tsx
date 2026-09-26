@@ -17,8 +17,8 @@
  * @module
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { RunningToolCall } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-chat/client'
+import type { RunningToolCall } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { ArtifactRow } from '../ArtifactRow.tsx'
 import { hostArtifactTheme, type ArtifactTheme } from '../sandbox.ts'
 import { buildStreamingBridgeDocument } from './bridge.ts'
@@ -69,7 +69,8 @@ export function DraftSurface({ html }: { html: string }) {
 
 /** The keyed `artifact-draft` chat node view: renders the artifact TOOL ROW
  *  with the streamed create call as its running block. */
-export function ArtifactDraftNodeView({ node, cwd, openFile, inspectCall }: ChatNodeViewProps<'artifact-draft'>) {
+export function ArtifactDraftNodeView(props: ChatNodeViewProps<'artifact-draft'>) {
+  const { node, cwd, openFile, inspectCall, loadImage } = props
   const data = node.data
   const block: RunningToolCall = {
     callId: data.callId,
@@ -82,7 +83,6 @@ export function ArtifactDraftNodeView({ node, cwd, openFile, inspectCall }: Chat
     turn: 0,
     step: 0,
     time: 0,
-    callView: null,
     subCalls: [],
   }
   return (
@@ -92,6 +92,7 @@ export function ArtifactDraftNodeView({ node, cwd, openFile, inspectCall }: Chat
       block={block}
       cwd={cwd}
       openFile={openFile}
+      loadImage={loadImage}
       inspect={inspectCall === undefined ? undefined : () => inspectCall(data.callId)}
     />
   )

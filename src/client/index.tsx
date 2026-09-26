@@ -7,22 +7,23 @@
  *   that streams the model's in-flight create html into a live preview.
  */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-slots'
+import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { ArtifactRow } from './ArtifactRow.tsx'
 import { artifactDraftDefinition } from './stream/draft.ts'
 import { ArtifactDraftNodeView } from './stream/DraftSurface.tsx'
 import { initInteractionSubmit } from './stream/submit.ts'
 
-/** Required services: the slot registry, the conversation-node registry, and
- *  the sessions service (interaction submission tracks the current session). */
-export const inject = ['slots', 'conversationEvents', 'sessions']
+/** Required services: the slot registry, the ui-conversation event engine,
+ *  and the sessions service (interaction submission tracks the current
+ *  session). */
+export const inject = ['slots', 'uiConversation', 'sessions']
 
 /**
  * Mount the artifact rows and the streaming draft node.
  * @param ctx - client root context.
  */
-export function apply(ctx: ClientContext): void {
+export function apply(ctx: Context): void {
   ctx.slots.inject('tool.call.toolview', function* () {
     yield ctx.slots.register({
       name: 'tool.call.toolview',
@@ -35,15 +36,15 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => initInteractionSubmit(ctx), 'dsh-html-artifact: interaction submit bridge')
   // The streaming draft Definition: lives for this plugin's lifetime and is
   // removed automatically on unload (the registry wraps it in a ctx effect).
-  ctx.conversationEvents.register(artifactDraftDefinition)
+  ctx.uiConversation.events.register(artifactDraftDefinition)
   ctx.slots.inject('conversation.chat.node', function* () {
     yield ctx.slots.register({
       name: 'conversation.chat.node',
       key: 'artifact-draft',
-      // The 'conversation' dictionary namespace, matching the shipped chat
-      // node renderers (ui-conversation registers it; the draft row needs no
-      // copy of its own).
-      locale: 'conversation',
+      // The 'chat' dictionary namespace, matching the shipped chat node
+      // renderers (ui-chat registers it; the draft row needs no copy of its
+      // own).
+      locale: 'chat',
     }, ArtifactDraftNodeView)
   })
 }

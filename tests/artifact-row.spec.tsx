@@ -8,7 +8,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import type { RunningToolCall, ToolCallBlock, ToolResultNode } from '@deepseek-ai/dsh-client-runtime/client'
+import type { RunningToolCall, ToolCallBlock, ToolResultNode } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { ArtifactRow, type ArtifactRowProps } from '../src/client/ArtifactRow.tsx'
 
 afterEach(cleanup)
@@ -22,12 +22,12 @@ function running(args: unknown): RunningToolCall {
     turn: 1,
     step: 1,
     time: 0,
-    callView: { card: 'generic', title: 'Create HTML artifact' },
     subCalls: [],
   }
 }
 
-/** A settled artifact block with the given args and wire result view. */
+/** A settled artifact block with the given args and wire result view. The
+ *  dsh 0.1.5-rc.3 result node carries the presentResult view on `meta`. */
 function settled(args: unknown, resultView: unknown): ToolResultNode {
   return {
     kind: 'tool-result',
@@ -38,14 +38,21 @@ function settled(args: unknown, resultView: unknown): ToolResultNode {
     callTime: 0,
     content: [{ type: 'text', text: 'ok' }],
     isError: false,
-    callView: null,
-    resultView: resultView as ToolResultNode['resultView'],
+    meta: resultView,
     subCalls: [],
   }
 }
 
 function rowProps(block: ToolCallBlock): ArtifactRowProps {
-  return { callId: 'c1', toolName: 'artifact', block, openFile: () => {}, inspect: undefined, cwd: undefined }
+  return {
+    callId: 'c1',
+    toolName: 'artifact',
+    block,
+    openFile: () => {},
+    inspect: undefined,
+    cwd: undefined,
+    loadImage: () => Promise.resolve(''),
+  }
 }
 
 /** Expand the disclosure row (read/destroy/list rows start collapsed). */

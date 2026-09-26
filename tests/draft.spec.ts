@@ -7,31 +7,32 @@
 import { describe, expect, it } from 'vitest'
 import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
 import type {
-  ChatConversationViewNode, ConversationMatch, ConversationNodeContext, ConversationNodeDefinition,
-} from '@deepseek-ai/dsh-client-runtime/client'
+  ConversationMatch, ConversationNodeContext, ConversationNodeDefinition, ConversationStartMatch,
+} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { ChatConversationViewNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { artifactDraftDefinition, type ArtifactDraftData } from '../src/client/stream/draft.ts'
 
 type Definition = ConversationNodeDefinition<unknown>
 type DraftNode = ChatConversationViewNode & { data: ArtifactDraftData }
 
 function match(seq: number, event: SessionEvent, role: 'start' | 'update' = 'update'): ConversationMatch {
-  return { event, view: undefined, role, location: { kind: 'unresolved' } }
+  return { event, role, location: { kind: 'unresolved' } }
 }
 
 function stepStart(seq: number, turn: number, step: number): SessionEvent {
-  return { type: 'step/start', seq, time: 0, data: { turn, step } }
+  return { type: 'step/start', seq, time: 0, data: { turn, step } } as unknown as SessionEvent
 }
 
 function delta(seq: number, turn: number, step: number, index: number, id: string, name: string, argumentsDelta: string): SessionEvent {
   return {
-    type: 'assistant/chunk', seq, time: 0,
+    type: 'assistant/live-chunk', seq, time: 0,
     data: { turn, step, chunk: { type: 'tool-call-delta', index, id, name, argumentsDelta } },
   } as unknown as SessionEvent
 }
 
 function blockEnd(seq: number, turn: number, step: number, index: number, block: { type: 'tool-call'; id: string; name: string; arguments: string }): SessionEvent {
   return {
-    type: 'assistant/chunk', seq, time: 0,
+    type: 'assistant/live-chunk', seq, time: 0,
     data: { turn, step, chunk: { type: 'block-end', index, block } },
   } as unknown as SessionEvent
 }
@@ -56,7 +57,7 @@ function drive(events: SessionEvent[]): { node: DraftNode | null; visible: Draft
   const definition = artifactDraftDefinition as Definition
   const startEvent = events[0]
   if (startEvent === undefined || startEvent.type !== 'step/start') throw new Error('drive needs step/start first')
-  const startMatch = match(startEvent.seq, startEvent, 'start')
+  const startMatch = match(startEvent.seq, startEvent, 'start') as ConversationStartMatch
   const matches: ConversationMatch[] = [startMatch]
   const current = new Map<string, DraftNode>()
   let state: unknown = definition.start(

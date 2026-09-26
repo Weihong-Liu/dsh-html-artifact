@@ -1,6 +1,6 @@
 {
   "name": "@dsh-external/dsh-html-artifact",
-  "description": "DSH HTML-artifact plugin: an `artifact` tool (create/patch/read/destroy/list) whose HTML documents render live in a sandboxed iframe in the GUI. The model PATCHES an artifact by id (edit-style old_string/new_string replacement) instead of resending the whole document; each settled patch updates the live preview in place. Pure extension: the `card: 'artifact'` render intent rides presentResult and a keyed `tool.call.toolview` atomic view — no harness core changes.",
+  "description": "DSH HTML-artifact plugin: an `artifact` tool (create/patch/read/destroy/list) whose HTML documents render live in a sandboxed iframe in the GUI. The model PATCHES an artifact by id (edit-style old_string/new_string replacement) instead of resending the whole document; each settled patch updates the live preview in place. Pure extension: the `card: 'artifact'` render intent rides presentResult and a keyed `tool.call.toolview` atomic view \u2014 no harness core changes.",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -44,6 +44,7 @@
     "@deepseek-ai/dsh-tools": "*",
     "@deepseek-ai/dsh-client-ui-primitives": "*",
     "@deepseek-ai/dsh-client-ui-slots": "*",
+    "@deepseek-ai/dsh-client-ui-conversation": "*",
     "react": "^18.2.0"
   },
   "devDependencies": {
@@ -55,7 +56,6 @@
     "@deepseek-ai/dsh-tools": "link:../dsh2026/deepseek-harness/packages/core/tools",
     "@deepseek-ai/schemastery": "link:../dsh2026/deepseek-harness/vendor/schemastery",
     "@deepseek-ai/dsh-client-locale": "link:../dsh2026/deepseek-harness/packages/client/locale",
-    "@deepseek-ai/dsh-client-runtime": "link:../dsh2026/deepseek-harness/packages/client/runtime",
     "@deepseek-ai/dsh-client-test-runtime": "link:../dsh2026/deepseek-harness/packages/test-support/client-runtime",
     "@deepseek-ai/dsh-client-ui-primitives": "link:../dsh2026/deepseek-harness/packages/client/ui-primitives",
     "@deepseek-ai/dsh-client-ui-slots": "link:../dsh2026/deepseek-harness/packages/client/ui-slots",
@@ -74,7 +74,10 @@
     "@testing-library/react": "^16.1.0",
     "@testing-library/dom": "^10.4.0",
     "jsdom": "^26.0.0",
-    "vite-tsconfig-paths": "^5.1.0"
+    "vite-tsconfig-paths": "^5.1.0",
+    "@deepseek-ai/dsh-client-ui-chat": "link:../dsh2026/deepseek-harness/packages/client/ui-chat",
+    "@deepseek-ai/dsh-api-session-controller": "link:../dsh2026/deepseek-harness/packages/api/session-controller",
+    "@deepseek-ai/dsh-client-ui-renderer": "link:../dsh2026/deepseek-harness/packages/client/ui-renderer"
   },
   "license": "BSD-3-Clause"
 }

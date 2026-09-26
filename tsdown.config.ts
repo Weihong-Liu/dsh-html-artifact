@@ -16,17 +16,25 @@ import type { UserConfig } from 'tsdown'
 const require = createRequire(import.meta.url)
 const PLUGIN_ID = '@dsh-external/dsh-html-artifact'
 
-/** Module specifiers the dsh web shell shares into its frozen module table. */
+/** Module specifiers the dsh 0.1.5-rc.3 web shell shares into its frozen
+ *  module table (the SPA seed map: react family, cordis, store, slots,
+ *  primitives, dockkit). */
 const PLATFORM_MODULES = [
   'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', 'cordis',
+  '@deepseek-ai/cordis',
+  '@deepseek-ai/dsh-client-store',
   '@deepseek-ai/dsh-client-ui-slots',
-  '@deepseek-ai/dsh-client-web-react',
   '@deepseek-ai/dsh-client-ui-primitives',
-  '@deepseek-ai/dsh-client-schema-form',
+  '@deepseek-ai/dsh-client-ui-dockkit',
 ] as const
 
-/** Externals resolved from the loader module table. */
-const CLIENT_EXTERNALS: readonly string[] = [...PLATFORM_MODULES, '@deepseek-ai/dsh-client-runtime/client']
+/** Externals resolved from the loader module table. The conversation client
+ *  is a materialized platform package (served lib/client.js), declared in
+ *  dsh.plugin.json `client.inject`. */
+const CLIENT_EXTERNALS: readonly string[] = [
+  ...PLATFORM_MODULES,
+  '@deepseek-ai/dsh-client-ui-conversation/client',
+]
 
 const CSS_VIRTUAL_PREFIX = '\0dsh-css:'
 const CSS_VIRTUAL_SUFFIX = '.mjs'

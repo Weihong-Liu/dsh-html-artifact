@@ -1,13 +1,14 @@
 /**
  * The `artifact-draft` chat node: a ConversationNodeDefinition (registered on
- * the runtime's `conversationEvents` service — no ui-conversation value
- * imports) that folds the model's STREAMING artifact calls into a live chat
- * node. While the model writes a `create` call's html token by token, the
- * accumulated `tool-call-delta` arguments are parsed tolerantly and published
- * as a draft node the browser half renders into a persistent bridge iframe
- * (no per-chunk iframe reload). The draft hides once the call is announced
- * (`tool/call`) — the settled/announced tool row takes over — and never
- * appears for patch/read/destroy/list calls (their args carry no html).
+ * the `uiConversation` service's event engine — the dsh 0.1.5-rc.3 home of
+ * the shipped assistant-step Definition) that folds the model's STREAMING
+ * artifact calls into a live chat node. While the model writes a `create`
+ * call's html token by token, the accumulated `tool-call-delta` arguments are
+ * parsed tolerantly and published as a draft node the browser half renders
+ * into a persistent bridge iframe (no per-chunk iframe reload). The draft
+ * hides once the call is announced (`tool/call`) — the settled/announced tool
+ * row takes over — and never appears for patch/read/destroy/list calls (their
+ * args carry no html).
  *
  * The Definition follows the engine contract like the shipped assistant-step
  * Definition: identity is the `turn:step` of the streaming events, matched
@@ -16,9 +17,8 @@
  */
 import type {
   ConversationMatch, ConversationNodeContext, ConversationNodeDefinition,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import { conversationContextKey } from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { ChatNode } from '@deepseek-ai/dsh-client-ui-chat/client'
 import { extractStreamingHtml, extractStreamingTitle, isStreamingCreate } from './extract.ts'
 
 /** The wire shape of one streamed artifact call inside the Definition state. */
@@ -54,7 +54,7 @@ export interface ArtifactDraftData {
   title?: string
 }
 
-declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+declare module '@deepseek-ai/dsh-client-ui-chat/client' {
   interface ChatNodeDataMap {
     /** Live artifact draft: renders the model's streaming create html. */
     'artifact-draft': ArtifactDraftData
@@ -103,7 +103,7 @@ function draftCall(callId: string, argsRaw: string, previous: DraftCall | undefi
  */
 export function updateDraftState(state: ArtifactDraftState, match: ConversationMatch): ArtifactDraftState {
   const event = match.event
-  if (event.type === 'assistant/chunk') {
+  if (event.type === 'assistant/live-chunk') {
     const chunk = event.data.chunk
     if (chunk.type === 'tool-call-delta' && chunk.name === 'artifact') {
       const callId = String(chunk.id)
@@ -160,7 +160,7 @@ export const artifactDraftDefinition: ConversationNodeDefinition<ArtifactDraftSt
   target: 'chat',
   match(event) {
     if (event.type === 'step/start') return { id: stepId(event), role: 'start' }
-    if (event.type === 'assistant/chunk') {
+    if (event.type === 'assistant/live-chunk') {
       const chunk = event.data.chunk
       if (chunk.type === 'tool-call-delta' && chunk.name === 'artifact') {
         return { id: stepId(event), role: 'update' }
@@ -186,7 +186,7 @@ export const artifactDraftDefinition: ConversationNodeDefinition<ArtifactDraftSt
   },
   update: (context, match) => updateDraftState(context.state, match),
   publication: (match) => {
-    if (match.event.type === 'assistant/chunk'
+    if (match.event.type === 'assistant/live-chunk'
       && match.event.data.chunk.type === 'tool-call-delta') {
       return 'animation-frame'
     }
@@ -200,7 +200,7 @@ export const artifactDraftDefinition: ConversationNodeDefinition<ArtifactDraftSt
       // materialized: when a previous build produced a visible node, keep the
       // SAME key with hidden visibility (the settled tool row takes over);
       // when nothing was ever materialized, there is nothing to hide.
-      const current = context.current.get('chat')
+      const current = context.current.get('chat') as ChatNode<'artifact-draft'> | null | undefined
       if (current === undefined || current === null) return null
       return { ...current, visibility: 'hidden' }
     }
@@ -208,7 +208,7 @@ export const artifactDraftDefinition: ConversationNodeDefinition<ArtifactDraftSt
     // model started writing the call.
     let anchorSeq = context.start?.event.seq ?? 0
     for (const match of context.matches) {
-      if (match.event.type !== 'assistant/chunk') continue
+      if (match.event.type !== 'assistant/live-chunk') continue
       const chunk = match.event.data.chunk
       if (chunk.type === 'tool-call-delta' && chunk.name === 'artifact') {
         anchorSeq = match.event.seq
@@ -216,7 +216,7 @@ export const artifactDraftDefinition: ConversationNodeDefinition<ArtifactDraftSt
       }
     }
     return {
-      key: conversationContextKey('artifact-draft', context.id),
+      key: context.key,
       kind: 'artifact-draft',
       id: context.id,
       target: 'chat',

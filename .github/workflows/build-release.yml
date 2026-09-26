@@ -40,10 +40,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: deepseek-ai/deepseek-harness
-          # rc.5-era master (npm-public merge); the plugin's link: devDependencies
-          # resolve into this checkout at ../dsh2026/deepseek-harness/... — the
-          # layout this repo's pnpm-lock.yaml records.
-          ref: 47f943859bef60e4160492346772ded9b24f765a
+          # dsh-v0.1.5-rc.3 tag: this fork targets the released 0.1.5-rc.3
+          # harness (the client-runtime package and `resultView` field do not
+          # exist there; the ported client rides the rc.3 seed table and
+          # `meta` instead). The plugin's link: devDependencies resolve into
+          # this checkout at ../dsh2026/deepseek-harness/... — the layout
+          # this repo's pnpm-lock.yaml records.
+          ref: dsh-v0.1.5-rc.3
           path: dsh2026/deepseek-harness
           fetch-depth: 1
 

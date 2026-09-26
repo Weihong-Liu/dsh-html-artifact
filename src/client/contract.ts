@@ -1,37 +1,15 @@
 /**
  * Local toolview contract for the dsh-html-artifact plugin: the owner currency
  * the stock ui-tool rows supply at `tool.call.toolview` and the pure
- * artifact-card derivation, declared locally so this plugin never imports the
- * stock ui-tool contract (one-way dependency). The `declare module` merge
- * restores the slot key this plugin registers into — the stock ui-tool bundle
- * declares the same row with the same shape, and interface merging accepts the
- * duplicate identical declaration.
+ * artifact-card derivation. The slot entry itself is declared by the stock
+ * ui-tool bundle on dsh 0.1.5-rc.3, so this plugin imports its owner type
+ * instead of re-declaring the SlotMap entry (type-only, one-way dependency).
  * @module
  */
-import type { ToolCallBlock } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ToolCallBlock } from '@deepseek-ai/dsh-client-ui-chat/client'
+import type { ToolCallOwnerProps } from '@deepseek-ai/dsh-client-ui-tool/client'
 
-/** What the stock ui-tool rows pass to the `tool.call.toolview` keyed slots. */
-export interface ToolCallOwnerProps {
-  /** Tool call identity, stable across running and settled forms. */
-  callId: string
-  /** Wire Tool name and keyed dispatch value. */
-  toolName: string
-  /** Frozen running call or settled result node. */
-  block: ToolCallBlock
-  /** Session workspace root for relative summaries. */
-  cwd?: string | undefined
-  /** Open a Tool argument path through the Host. */
-  openFile: (path: string) => void
-  /** Inspect this call in the trajectory view when available. */
-  inspect?: (() => void) | undefined
-}
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface SlotMap {
-    /** Keyed atomic Tool call view (declared by the stock ui-tool chat tree). */
-    'tool.call.toolview': { kind: 'keyed'; scope: 'session'; owner: ToolCallOwnerProps }
-  }
-}
+export type { ToolCallOwnerProps }
 
 /** One listable artifact summary on the wire. */
 export interface ArtifactSummaryView {
@@ -65,14 +43,16 @@ function asRecord(value: unknown): Record<string, unknown> | null {
  * Narrow a wire `card:'artifact'` view to a well-formed model, or null when
  * this call is not an artifact card (running calls have no result view; a
  * `card` or `op` value this UI version does not know arrives over the wire
- * from a newer host and takes the generic path).
+ * from a newer host and takes the generic path). On dsh 0.1.5-rc.3 the
+ * presentResult view rides the result node's `meta` (the host persists
+ * `output.presentationMeta` there).
  * @param block - running or settled tool node.
  * @returns the artifact-card model, or null for the generic path.
  */
 export function artifactCardModel(block: ToolCallBlock): ArtifactCardModel | null {
   // Running calls have no result view; the artifact card is result-only.
   if (!('kind' in block)) return null
-  const view = asRecord(block.resultView)
+  const view = asRecord(block.meta)
   if (view === null || view.card !== 'artifact') return null
   const op = view.op
   if (op !== 'create' && op !== 'patch' && op !== 'read' && op !== 'destroy' && op !== 'list') return null

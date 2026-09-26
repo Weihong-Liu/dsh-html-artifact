@@ -19,7 +19,7 @@ import type {} from '@deepseek-ai/dsh-commands'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { JsonValue, ToolResultView } from '@deepseek-ai/dsh-tools'
+import type { ToolResultView } from '@deepseek-ai/dsh-tools'
 import { parseSubmissionPayload, renderInteractionSubmission, renderSubmissionSummary } from './interaction.ts'
 import { ArtifactStore, truncateHtml, type ArtifactState } from './registry.ts'
 
@@ -230,7 +230,7 @@ export function apply(ctx: Context, config: Config = {}): void {
           }
         }
       },
-      presentationMeta: (_args, value): JsonValue => {
+      presentationMeta: (_args, value) => {
         if (!isArtifactValue(value)) return null
         switch (value.op) {
           case 'create':

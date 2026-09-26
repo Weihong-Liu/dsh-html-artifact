@@ -3,10 +3,12 @@
  * from a sandboxed surface into the agent's NEXT request context through the
  * host-side `/artifact-submit` slash command (never sent to the model as a
  * chat message). The bridge is initialized once by the plugin apply with the
- * sessions service and tracks the current session id through the provide feed.
+ * sessions service and tracks the current session id through the list feed.
  * @module
  */
-import type { ClientContext, ISessions, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
+import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 
 let sessions: ISessions | undefined
 let currentSessionId: SessionId | undefined
@@ -17,11 +19,11 @@ let cleanup: (() => void) | undefined
  * @param ctx - client root context (injects the sessions service).
  * @returns a disposer that detaches the feed subscription.
  */
-export function initInteractionSubmit(ctx: ClientContext): () => void {
+export function initInteractionSubmit(ctx: Context): () => void {
   sessions = ctx.sessions
-  const info = ctx.sessions.currentProvideInfo
+  const info = ctx.sessions.list
   const update = (): void => {
-    currentSessionId = info.getSnapshot()?.sessionId as SessionId | undefined
+    currentSessionId = info.getSnapshot()?.current as SessionId | undefined
   }
   update()
   cleanup = info.subscribe(update)
